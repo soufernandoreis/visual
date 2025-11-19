@@ -4,62 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inteligência Artificial para Negócios</title>
-    <!-- Estilos CSS básicos para o canvas e os textos H1/H2 -->
+    <!-- Estilos CSS para layout, canvas e textos -->
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #050509; /* Cor de fundo para combinar com o Three.js */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte mais moderna */
-            color: white; /* Cor padrão do texto */
-            display: flex; /* Para centralizar o conteúdo verticalmente */
-            flex-direction: column;
-            justify-content: center; /* Centraliza verticalmente */
-            align-items: center; /* Centraliza horizontalmente */
-            min-height: 100vh; /* Garante que o body ocupe a altura total da viewport */
-            position: relative; /* Necessário para posicionar o canvas e o conteúdo */
+            background-color: #050509; /* Cor de fundo */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            display: flex; /* Habilita flexbox para layout */
+            justify-content: space-between; /* Espaça o conteúdo principal e a esfera */
+            align-items: center; /* Centraliza verticalmente os itens flex */
+            min-height: 100vh; /* Garante que o body ocupe a altura total */
+            padding: 0 5vw; /* Adiciona algum padding lateral para o conteúdo não colar nas bordas */
+            position: relative;
         }
+
         #bg-canvas {
             display: block;
-            width: 100vw;
+            width: 50vw; /* Canvas ocupa 50% da largura da viewport */
             height: 100vh;
-            position: fixed; /* Fixa o canvas na tela para que outros elementos possam ficar por cima */
+            position: fixed; /* Fixa o canvas */
             top: 0;
-            left: 0;
-            z-index: -1; /* Coloca o canvas atrás de outros conteúdos do body */
+            right: 0; /* Alinha o canvas à direita */
+            z-index: -1;
         }
 
-        /* Estilos para o H1 */
+        /* Container para os textos H1 e H2 */
+        .main-content {
+            flex: 1; /* Ocupa o espaço disponível */
+            max-width: 45vw; /* Limita a largura do conteúdo principal */
+            z-index: 1; /* Garante que esteja acima do canvas */
+            text-align: left; /* Alinha o texto à esquerda */
+        }
+
         h1 {
-            text-align: center;
-            font-size: 2.8em; /* Tamanho ajustado para caber a frase */
-            color: #E0FFFF; /* Um ciano claro, combinando com a esfera */
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.7); /* Sombra para um efeito de brilho mais forte */
-            margin-bottom: 10px; /* Espaço entre H1 e H2 */
-            line-height: 1.2; /* Espaçamento entre linhas */
-            max-width: 80%; /* Limita a largura para que o texto não se estique muito em telas grandes */
-            z-index: 1; /* Garante que o H1 esteja acima do canvas */
+            font-size: 2.8em;
+            color: #FFFFF0; /* Amarelo muito claro, quase branco */
+            text-shadow: 0 0 15px rgba(255, 255, 0, 0.7); /* Sombra amarela */
+            margin-bottom: 10px;
+            line-height: 1.2;
+            margin-top: 0; /* Remove margem superior padrão */
         }
 
-        /* Estilos para o H2 */
         h2 {
-            text-align: center;
-            font-size: 1.5em; /* Tamanho para o subtítulo */
-            color: #B0E0E6; /* Cor ligeiramente mais escura que o H1 */
-            text-shadow: 0 0 8px rgba(176, 224, 230, 0.6); /* Sombra suave */
-            margin-top: 0; /* Remove margem superior padrão do h2 */
-            max-width: 70%;
-            z-index: 1; /* Garante que o H2 esteja acima do canvas */
+            font-size: 1.5em;
+            color: #FFD700; /* Dourado/Amarelo */
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+            margin-top: 0;
         }
 
-        /* Estilo para a mensagem de erro se o canvas não for encontrado */
+        /* Estilo para a mensagem de erro */
         #error-message {
             color: white;
             text-align: center;
-            margin-top: 50px;
             font-size: 1.2em;
-            z-index: 10; /* Garante que a mensagem de erro esteja acima de tudo */
-            position: absolute; /* Para que possa ser posicionado independentemente */
+            z-index: 10;
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -70,14 +71,14 @@
     </style>
 </head>
 <body>
-    <!-- Seus títulos H1 e H2 -->
-    <h1>Organize os processos que fazem o seu negócio escalar</h1>
-    <h2>Inteligência artificial para negócios no Digital</h2>
+    <div class="main-content">
+        <h1>Organize os processos que fazem o seu negócio escalar</h1>
+        <h2>Inteligência artificial para negócios no Digital</h2>
+    </div>
 
-    <!-- O elemento canvas onde o Three.js renderizará a cena -->
+    <!-- O elemento canvas, agora posicionado à direita -->
     <canvas id="bg-canvas"></canvas>
 
-    <!-- Um div para exibir mensagens de erro se o canvas não for encontrado -->
     <div id="error-message"></div>
 
     <!-- Importa a biblioteca Three.js -->
@@ -95,6 +96,7 @@
             throw new Error("Canvas element not found.");
         }
 
+        // Three.js renderer deve ser criado com o canvas real, não um placeholder
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setClearColor(0x050509, 1);
@@ -104,7 +106,7 @@
 
         const camera = new THREE.PerspectiveCamera(
             45,
-            window.innerWidth / window.innerHeight,
+            canvas.clientWidth / canvas.clientHeight, // Usar o tamanho do canvas para o aspect ratio
             0.1,
             100
         );
@@ -151,9 +153,10 @@
                 float d = length(gl_PointCoord - 0.5);
                 if (d > 0.5) discard;
 
-                vec3 colorCore = vec3(0.03, 0.08, 0.16);
-                vec3 colorEdge = vec3(0.68, 0.92, 1.00);
-                vec3 colorGlow = vec3(1.00, 1.00, 1.00);
+                // Paleta de cores amarelas e brancas
+                vec3 colorCore = vec3(0.1, 0.08, 0.03);   // Base escura amarelada
+                vec3 colorEdge = vec3(1.0, 0.9, 0.6);    // Amarelo claro
+                vec3 colorGlow = vec3(1.0, 1.0, 1.0);    // Branco puro para o highlight
 
                 float glow = smoothstep(0.0, 0.4, vNoise);
 
@@ -168,8 +171,7 @@
         `;
 
         // ======== GEOMETRIA + MATERIAL ========
-        // Tamanho da esfera alterado para 0.5
-        const geometry = new THREE.SphereGeometry(0.5, 260, 260); // Raio alterado de 1.4 para 0.5
+        const geometry = new THREE.SphereGeometry(0.5, 260, 260);
 
         const uniforms = {
             uTime:          { value: 0 },
@@ -195,20 +197,22 @@
         const targetMouse = new THREE.Vector2(0, 0);
 
         window.addEventListener("mousemove", (event) => {
-            targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            // As coordenadas do mouse agora precisam ser relativas ao canvas se ele não ocupar 100%
+            const rect = canvas.getBoundingClientRect();
+            targetMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            targetMouse.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
         });
 
         // ======== RESPONSIVIDADE ========
         function onResize() {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+            const width = canvas.clientWidth; // Usar clientWidth/Height do canvas
+            const height = canvas.clientHeight; // para pegar o tamanho renderizado
             renderer.setSize(width, height);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
         }
         window.addEventListener("resize", onResize);
-        onResize();
+        onResize(); // Chama uma vez para configurar o tamanho inicial
 
         // ======== LOOP DE ANIMAÇÃO ========
         let clock = new THREE.Clock();
