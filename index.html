@@ -2,160 +2,37 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Landing IA – Esfera Biomórfica</title>
+  <title>Esfera IA – Avançada</title>
   <style>
-    * {
+    html, body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
       height: 100%;
       overflow: hidden;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #050509;
-      color: #ffffff;
     }
 
-    /* Canvas do Three.js ocupando o fundo inteiro */
-    #bg-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-
-    /* Gradiente leve para dar contraste nos textos */
-    .overlay-gradient {
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(circle at center,
-          rgba(0,0,0,0) 0%,
-          rgba(5,5,15,0.7) 55%,
-          rgba(5,5,15,0.98) 100%);
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    /* Conteúdo da landing por cima */
-    .hero {
-      position: relative;
-      z-index: 2;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 5vw;
-    }
-
-    .hero-inner {
-      max-width: 620px;
-    }
-
-    .hero-tag {
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-size: 0.8rem;
-      color: #8f8ff5;
-      margin-bottom: 0.7rem;
-    }
-
-    .hero h1 {
-      font-size: clamp(2.4rem, 4vw, 3.5rem);
-      line-height: 1.1;
-      margin-bottom: 1rem;
-    }
-
-    .hero p {
-      font-size: 1.05rem;
-      line-height: 1.6;
-      margin-bottom: 1.5rem;
-      color: #c7c7d9;
-    }
-
-    .hero-cta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-    }
-
-    .hero-cta a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.9rem 1.6rem;
-      border-radius: 999px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.95rem;
-      transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease,
-        background 0.15s ease,
-        color 0.15s ease;
-    }
-
-    .hero-cta a.primary {
-      background: linear-gradient(135deg, #7f5bff, #00e5ff);
-      color: #050509;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    }
-
-    .hero-cta a.primary:hover {
-      transform: translateY(-1px) scale(1.02);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8);
-    }
-
-    .hero-cta a.secondary {
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: #e6e6ff;
-      background: rgba(5, 5, 15, 0.8);
-    }
-
-    .hero-cta a.secondary:hover {
-      background: rgba(10, 10, 25, 0.9);
-    }
-
-    @media (max-width: 600px) {
-      .hero {
-        align-items: flex-end;
-        padding-bottom: 3rem;
-      }
+    canvas {
+      display: block;
     }
   </style>
 </head>
 <body>
-
-  <!-- Canvas do Three.js -->
   <canvas id="bg-canvas"></canvas>
-  <div class="overlay-gradient"></div>
 
-  <!-- Hero da landing -->
-  <section class="hero">
-    <div class="hero-inner">
-      <div class="hero-tag">Inteligência Artificial para vendas</div>
-      <h1>Uma mente artificial focada em gerar novos clientes para você.</h1>
-      <p>
-        Automatize atendimento, qualificação e follow-up com uma IA que aprende com o seu negócio
-        e conversa com seus leads 24 horas por dia.
-      </p>
-
-      <div class="hero-cta">
-        <a href="#lead" class="primary">Quero ver na prática</a>
-        <a href="#como-funciona" class="secondary">Entenda como funciona</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Three.js -->
+  <!-- Three.js núcleo -->
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <!-- Pós-processamento para bloom real -->
+  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
   <script>
-    // ======== CONFIGURAÇÃO BÁSICA DO THREE.JS ========
+    // ============ Setup Básico =============
     const canvas = document.getElementById("bg-canvas");
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x050509, 1);
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x050509, 0.35);
@@ -168,17 +45,17 @@
     );
     camera.position.z = 4;
 
-    // ======== SHADERS (GLSL) ========
-
+    // ============ SHADERS =============
     const vertexShader = `
       uniform float uTime;
       uniform float uNoiseAmp;
       uniform float uMouseStrength;
+      uniform float uPulseIntensity;
+      uniform float uMagFieldStrength;
       uniform vec2  uMouse;
       varying float vNoise;
+      varying float vField;
 
-      // ruído simples baseado em seno – não é um Perlin perfeito,
-      // mas já cria variação orgânica boa o suficiente para o efeito visual
       float hash(vec3 p) {
         return sin(dot(p, vec3(17.1, 31.7, 11.3)) + uTime * 0.6);
       }
@@ -186,45 +63,60 @@
       void main() {
         vec3 pos = position;
 
-        // base de ruído usando normal e posição
-        float n = hash(normal * 3.0 + pos * 2.0);
+        // Ruído em múltiplas camadas para ficar mais orgânico
+        float n1 = hash(normal * 3.0 + pos * 2.0);
+        float n2 = hash(normal * 7.0 + pos * 5.0 + vec3(uTime * 0.5));
+        float n = 0.6 * n1 + 0.4 * n2;
         n = 0.5 + 0.5 * n; // normaliza para 0..1
 
-        // deformação pela "respiração" da esfera
-        float breathing = 0.5 + 0.5 * sin(uTime * 0.7);
-        float displacement = (n * 0.7 + breathing * 0.3) * uNoiseAmp;
+        // Pulso orgânico (respiração)
+        float breathing = 0.5 + 0.5 * sin(uTime * 0.9);
+        float displacement = (n * 0.7 + breathing * uPulseIntensity) * uNoiseAmp;
 
-        // influência do mouse (uMouse em -1..1)
+        // "Campos magnéticos" – listras fluídas ao redor do eixo Y
+        float angle = atan(pos.z, pos.x); // ângulo ao redor do eixo Y
+        float field = sin(angle * 4.0 + uTime * 1.5) * cos(pos.y * 3.0 + uTime * 0.7);
+        displacement += field * uMagFieldStrength;
+
+        // deslocamento tangencial para sugerir fluxo
+        vec3 tangent = normalize(vec3(-sin(angle), 0.0, cos(angle)));
+        pos += tangent * field * 0.05;
+
+        // Influência do mouse (uMouse em -1..1)
         vec3 mouseDir = normalize(vec3(uMouse, 1.0));
-        float mouseEffect = dot(normalize(pos), mouseDir);
+        float mouseEffect = dot(normalize(position), mouseDir);
         displacement += mouseEffect * uMouseStrength;
 
-        vec3 newPos = pos + normal * displacement;
+        vec3 newPos = position + normal * displacement;
 
         vNoise = n;
+        vField = field;
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
-        gl_PointSize = 2.2; // tamanho dos "grãos" da esfera
+        gl_PointSize = 2.2; // Tamanho das partículas (mantido como você pediu)
       }
     `;
 
     const fragmentShader = `
       varying float vNoise;
+      varying float vField;
 
       void main() {
-        // suaviza o ponto para ficar mais orgânico
         float d = length(gl_PointCoord - 0.5);
         if (d > 0.5) discard;
 
-        // gradiente de cor baseado no ruído
-        vec3 colorCore   = vec3(0.10, 0.20, 0.30);  // azul escuro
-        vec3 colorEdge   = vec3(0.70, 0.95, 1.00);  // ciano claro
-        vec3 colorGlow   = vec3(1.00, 1.00, 1.00);  // highlights
+        // cores base (frio, azulado, próximo do vídeo)
+        vec3 colorCore = vec3(0.03, 0.09, 0.16);   // azul bem escuro
+        vec3 colorEdge = vec3(0.70, 0.92, 1.00);   // ciano claro
+        vec3 colorHot  = vec3(1.00, 1.00, 1.00);   // highlight branco
 
-        float glow = smoothstep(0.0, 0.4, vNoise);
-        vec3 color = mix(colorCore, colorEdge, vNoise);
-        color = mix(color, colorGlow, glow * 0.35);
+        float fieldGlow = 0.5 + 0.5 * vField;
+        float energy = smoothstep(0.15, 0.95, vNoise + fieldGlow * 0.4);
 
+        vec3 color = mix(colorCore, colorEdge, energy);
+        color = mix(color, colorHot, energy * 0.35);
+
+        // borda suave do ponto
         float alpha = 1.0 - smoothstep(0.3, 0.5, d);
         alpha *= 0.95;
 
@@ -232,14 +124,16 @@
       }
     `;
 
-    // ======== GEOMETRIA + MATERIAL ========
-    const geometry = new THREE.SphereGeometry(1.4, 180, 180);
+    // ============ Geometria (maior densidade) =============
+    const geometry = new THREE.SphereGeometry(1.4, 260, 260); // mais segmentos = mais partículas
 
     const uniforms = {
-      uTime:          { value: 0 },
-      uNoiseAmp:      { value: 0.9 },
-      uMouseStrength: { value: 0.5 },
-      uMouse:         { value: new THREE.Vector2(0.0, 0.0) }
+      uTime:           { value: 0 },
+      uNoiseAmp:       { value: 1.05 },   // amplitude da deformação
+      uMouseStrength:  { value: 0.65 },   // quanto o mouse afeta
+      uPulseIntensity: { value: 0.55 },   // intensidade do "pulso orgânico"
+      uMagFieldStrength:{ value: 0.4 },   // força dos "campos magnéticos"
+      uMouse:          { value: new THREE.Vector2(0.0, 0.0) }
     };
 
     const material = new THREE.ShaderMaterial({
@@ -254,29 +148,49 @@
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
-    // ======== INTERAÇÃO COM O CURSOR ========
+    // ============ Pós-processamento (Bloom real) =============
+    const composer = new THREE.EffectComposer(renderer);
+    const renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const bloomParams = {
+      strength: 1.45, // intensidade do glow
+      radius:   0.85, // espalhamento
+      threshold: 0.0  // o quanto precisa ser "claro" pra brilhar
+    };
+
+    const bloomPass = new THREE.UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      bloomParams.strength,
+      bloomParams.radius,
+      bloomParams.threshold
+    );
+    composer.addPass(bloomPass);
+
+    // ============ Interação com Mouse =============
     const mouse = new THREE.Vector2(0, 0);
 
     window.addEventListener("mousemove", (event) => {
       const x = (event.clientX / window.innerWidth) * 2 - 1;
       const y = (event.clientY / window.innerHeight) * 2 - 1;
-      mouse.set(x, -y); // inverte Y
-
-      uniforms.uMouse.value.lerp(mouse, 0.1); // suaviza o movimento
+      mouse.set(x, -y);
+      uniforms.uMouse.value.lerp(mouse, 0.12); // suaviza
     });
 
-    // ======== RESPONSIVIDADE ========
+    // ============ Responsividade =============
     function onResize() {
       const width = window.innerWidth;
       const height = window.innerHeight;
       renderer.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+      composer.setSize(width, height);
+      bloomPass.setSize(width, height);
     }
     window.addEventListener("resize", onResize);
     onResize();
 
-    // ======== LOOP DE ANIMAÇÃO ========
+    // ============ Loop de Animação =============
     let clock = new THREE.Clock();
 
     function animate() {
@@ -285,11 +199,11 @@
       const elapsed = clock.getElapsedTime();
       uniforms.uTime.value = elapsed;
 
-      // rotação suave da esfera
-      points.rotation.y += 0.0025;
-      points.rotation.x = Math.sin(elapsed * 0.15) * 0.1;
+      // rotação e "vida"
+      points.rotation.y += 0.0035;
+      points.rotation.x = Math.sin(elapsed * 0.18) * 0.16;
 
-      renderer.render(scene, camera);
+      composer.render();
     }
 
     animate();
