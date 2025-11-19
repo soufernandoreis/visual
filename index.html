@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Esfera IA – Avançada</title>
+  <title>Esfera IA – Avançada (sem Bloom)</title>
   <style>
     html, body {
       margin: 0;
@@ -20,15 +20,9 @@
 <body>
   <canvas id="bg-canvas"></canvas>
 
-  <!-- Three.js núcleo -->
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-  <!-- Pós-processamento para bloom real -->
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
   <script>
-    // ============ Setup Básico =============
     const canvas = document.getElementById("bg-canvas");
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -45,7 +39,6 @@
     );
     camera.position.z = 4;
 
-    // ============ SHADERS =============
     const vertexShader = `
       uniform float uTime;
       uniform float uNoiseAmp;
@@ -63,26 +56,21 @@
       void main() {
         vec3 pos = position;
 
-        // Ruído em múltiplas camadas para ficar mais orgânico
         float n1 = hash(normal * 3.0 + pos * 2.0);
         float n2 = hash(normal * 7.0 + pos * 5.0 + vec3(uTime * 0.5));
         float n = 0.6 * n1 + 0.4 * n2;
-        n = 0.5 + 0.5 * n; // normaliza para 0..1
+        n = 0.5 + 0.5 * n;
 
-        // Pulso orgânico (respiração)
         float breathing = 0.5 + 0.5 * sin(uTime * 0.9);
         float displacement = (n * 0.7 + breathing * uPulseIntensity) * uNoiseAmp;
 
-        // "Campos magnéticos" – listras fluídas ao redor do eixo Y
-        float angle = atan(pos.z, pos.x); // ângulo ao redor do eixo Y
+        float angle = atan(pos.z, pos.x);
         float field = sin(angle * 4.0 + uTime * 1.5) * cos(pos.y * 3.0 + uTime * 0.7);
         displacement += field * uMagFieldStrength;
 
-        // deslocamento tangencial para sugerir fluxo
         vec3 tangent = normalize(vec3(-sin(angle), 0.0, cos(angle)));
         pos += tangent * field * 0.05;
 
-        // Influência do mouse (uMouse em -1..1)
         vec3 mouseDir = normalize(vec3(uMouse, 1.0));
         float mouseEffect = dot(normalize(position), mouseDir);
         displacement += mouseEffect * uMouseStrength;
@@ -93,7 +81,7 @@
         vField = field;
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
-        gl_PointSize = 2.2; // Tamanho das partículas (mantido como você pediu)
+        gl_PointSize = 2.2;
       }
     `;
 
@@ -105,10 +93,9 @@
         float d = length(gl_PointCoord - 0.5);
         if (d > 0.5) discard;
 
-        // cores base (frio, azulado, próximo do vídeo)
-        vec3 colorCore = vec3(0.03, 0.09, 0.16);   // azul bem escuro
-        vec3 colorEdge = vec3(0.70, 0.92, 1.00);   // ciano claro
-        vec3 colorHot  = vec3(1.00, 1.00, 1.00);   // highlight branco
+        vec3 colorCore = vec3(0.03, 0.09, 0.16);
+        vec3 colorEdge = vec3(0.70, 0.92, 1.00);
+        vec3 colorHot  = vec3(1.00, 1.00, 1.00);
 
         float fieldGlow = 0.5 + 0.5 * vField;
         float energy = smoothstep(0.15, 0.95, vNoise + fieldGlow * 0.4);
@@ -116,7 +103,6 @@
         vec3 color = mix(colorCore, colorEdge, energy);
         color = mix(color, colorHot, energy * 0.35);
 
-        // borda suave do ponto
         float alpha = 1.0 - smoothstep(0.3, 0.5, d);
         alpha *= 0.95;
 
@@ -124,16 +110,15 @@
       }
     `;
 
-    // ============ Geometria (maior densidade) =============
-    const geometry = new THREE.SphereGeometry(1.4, 260, 260); // mais segmentos = mais partículas
+    const geometry = new THREE.SphereGeometry(1.4, 260, 260);
 
     const uniforms = {
-      uTime:           { value: 0 },
-      uNoiseAmp:       { value: 1.05 },   // amplitude da deformação
-      uMouseStrength:  { value: 0.65 },   // quanto o mouse afeta
-      uPulseIntensity: { value: 0.55 },   // intensidade do "pulso orgânico"
-      uMagFieldStrength:{ value: 0.4 },   // força dos "campos magnéticos"
-      uMouse:          { value: new THREE.Vector2(0.0, 0.0) }
+      uTime:            { value: 0 },
+      uNoiseAmp:        { value: 1.05 },
+      uMouseStrength:   { value: 0.65 },
+      uPulseIntensity:  { value: 0.55 },
+      uMagFieldStrength:{ value: 0.4 },
+      uMouse:           { value: new THREE.Vector2(0.0, 0.0) }
     };
 
     const material = new THREE.ShaderMaterial({
@@ -148,50 +133,26 @@
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
-    // ============ Pós-processamento (Bloom real) =============
-    const composer = new THREE.EffectComposer(renderer);
-    const renderPass = new THREE.RenderPass(scene, camera);
-    composer.addPass(renderPass);
-
-    const bloomParams = {
-      strength: 1.45, // intensidade do glow
-      radius:   0.85, // espalhamento
-      threshold: 0.0  // o quanto precisa ser "claro" pra brilhar
-    };
-
-    const bloomPass = new THREE.UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      bloomParams.strength,
-      bloomParams.radius,
-      bloomParams.threshold
-    );
-    composer.addPass(bloomPass);
-
-    // ============ Interação com Mouse =============
     const mouse = new THREE.Vector2(0, 0);
 
     window.addEventListener("mousemove", (event) => {
       const x = (event.clientX / window.innerWidth) * 2 - 1;
       const y = (event.clientY / window.innerHeight) * 2 - 1;
       mouse.set(x, -y);
-      uniforms.uMouse.value.lerp(mouse, 0.12); // suaviza
+      uniforms.uMouse.value.lerp(mouse, 0.12);
     });
 
-    // ============ Responsividade =============
     function onResize() {
       const width = window.innerWidth;
       const height = window.innerHeight;
       renderer.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      composer.setSize(width, height);
-      bloomPass.setSize(width, height);
     }
     window.addEventListener("resize", onResize);
     onResize();
 
-    // ============ Loop de Animação =============
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     function animate() {
       requestAnimationFrame(animate);
@@ -199,11 +160,10 @@
       const elapsed = clock.getElapsedTime();
       uniforms.uTime.value = elapsed;
 
-      // rotação e "vida"
       points.rotation.y += 0.0035;
       points.rotation.x = Math.sin(elapsed * 0.18) * 0.16;
 
-      composer.render();
+      renderer.render(scene, camera);
     }
 
     animate();
