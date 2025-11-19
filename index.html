@@ -8,51 +8,124 @@
     <style>
         body {
             margin: 0;
-            overflow: hidden;
+            /* Removido overflow: hidden para permitir rolagem com novo conteúdo */
             background-color: #050509; /* Cor de fundo */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
-            display: flex; /* Habilita flexbox para layout */
-            justify-content: space-between; /* Espaça o conteúdo principal e a esfera */
-            align-items: center; /* Centraliza verticalmente os itens flex */
-            min-height: 100vh; /* Garante que o body ocupe a altura total */
-            padding: 0 5vw; /* Adiciona algum padding lateral para o conteúdo não colar nas bordas */
+            /* Layout flexbox para o conteúdo principal */
+            display: flex;
+            flex-direction: column; /* Conteúdo em coluna para permitir rolagem */
+            align-items: center; /* Centraliza o conteúdo horizontalmente */
+            min-height: 100vh;
             position: relative;
         }
 
         #bg-canvas {
             display: block;
-            width: 50vw; /* Canvas ocupa 50% da largura da viewport */
+            width: 100vw; /* Canvas agora ocupa toda a largura para ser o fundo geral */
             height: 100vh;
-            position: fixed; /* Fixa o canvas */
+            position: fixed;
             top: 0;
-            right: 0; /* Alinha o canvas à direita */
+            left: 0;
             z-index: -1;
         }
 
-        /* Container para os textos H1 e H2 */
-        .main-content {
-            flex: 1; /* Ocupa o espaço disponível */
-            max-width: 45vw; /* Limita a largura do conteúdo principal */
-            z-index: 1; /* Garante que esteja acima do canvas */
-            text-align: left; /* Alinha o texto à esquerda */
+        /* Container para o conteúdo principal visível acima do canvas */
+        .page-content {
+            width: 100%;
+            max-width: 1200px; /* Limita a largura do conteúdo principal da página */
+            margin: 0 auto; /* Centraliza o conteúdo da página */
+            padding: 50px 5vw; /* Padding superior/inferior e lateral */
+            box-sizing: border-box; /* Garante que padding não adicione à largura */
+            z-index: 1; /* Garante que o conteúdo esteja acima do canvas */
+            position: relative; /* Para z-index funcionar */
+        }
+
+        /* Seção de introdução (H1 e H2) */
+        .intro-section {
+            display: flex;
+            justify-content: space-between; /* Espaça o texto da esfera */
+            align-items: center;
+            min-height: calc(100vh - 100px); /* Ocupa quase toda a altura da tela */
+            padding-bottom: 50px; /* Espaço antes da próxima seção */
+        }
+
+        .intro-text {
+            flex: 1;
+            max-width: 45vw; /* Limita a largura do texto */
+            text-align: left;
         }
 
         h1 {
             font-size: 2.8em;
-            color: #FFFFF0; /* Amarelo muito claro, quase branco */
-            text-shadow: 0 0 15px rgba(255, 255, 0, 0.7); /* Sombra amarela */
+            color: #FFFFF0;
+            text-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
             margin-bottom: 10px;
             line-height: 1.2;
-            margin-top: 0; /* Remove margem superior padrão */
+            margin-top: 0;
         }
 
         h2 {
             font-size: 1.5em;
-            color: #FFD700; /* Dourado/Amarelo */
+            color: #FFD700;
             text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
             margin-top: 0;
         }
+
+        /* Esfera Three.js agora dentro de um container específico */
+        .threejs-sphere-container {
+            width: 50vw; /* Ocupa 50% da largura */
+            height: 100%; /* Altura total do flex container */
+            display: flex; /* Para centralizar a esfera, se necessário */
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Estilos para a nova seção "Quem sou eu" */
+        .about-me-section {
+            background-color: rgba(10, 10, 15, 0.8); /* Fundo semi-transparente escuro */
+            padding: 40px;
+            border-radius: 10px;
+            margin-top: 50px; /* Espaço do topo */
+            width: 100%; /* Ocupa a largura total do .page-content */
+            box-sizing: border-box;
+            display: flex; /* Para alinhar imagem e texto lado a lado */
+            gap: 40px; /* Espaçamento entre imagem e texto */
+            align-items: flex-start; /* Alinha o topo da imagem e texto */
+            flex-wrap: wrap; /* Permite que a imagem e o texto quebrem linha em telas menores */
+            color: #E0FFFF; /* Cor do texto da seção */
+        }
+
+        .about-me-section h3 {
+            font-size: 2.2em;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+            margin-top: 0;
+            width: 100%; /* Ocupa a largura total para o título */
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .about-me-section img {
+            width: 200px; /* Tamanho da imagem */
+            height: 200px; /* Mantém proporção */
+            border-radius: 50%; /* Imagem redonda */
+            object-fit: cover; /* Garante que a imagem preencha o círculo */
+            border: 5px solid #FFD700; /* Borda amarela */
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); /* Sombra para destaque */
+        }
+
+        .about-me-text {
+            flex: 1; /* Ocupa o espaço restante */
+            font-size: 1.1em;
+            line-height: 1.6;
+            max-width: calc(100% - 240px); /* Ajusta a largura do texto ao lado da imagem */
+        }
+
+        .about-me-text p:last-child {
+            margin-bottom: 0; /* Remove margem do último parágrafo */
+        }
+
 
         /* Estilo para a mensagem de erro */
         #error-message {
@@ -60,23 +133,79 @@
             text-align: center;
             font-size: 1.2em;
             z-index: 10;
-            position: absolute;
+            position: fixed; /* Mudar para fixed para que esteja sempre visível */
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.9);
             padding: 20px;
             border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+        }
+
+        /* Media Queries para Responsividade */
+        @media (max-width: 900px) {
+            .intro-section {
+                flex-direction: column; /* Empilha texto e esfera em telas menores */
+                text-align: center; /* Centraliza texto */
+                min-height: auto; /* Remove altura mínima */
+            }
+            .intro-text {
+                max-width: 90vw; /* Texto ocupa mais largura */
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            h1 { font-size: 2em; }
+            h2 { font-size: 1.2em; }
+
+            .threejs-sphere-container {
+                width: 90vw; /* Esfera ocupa mais largura */
+                height: 50vh; /* Altura menor para a esfera */
+            }
+
+            .about-me-section {
+                flex-direction: column; /* Empilha imagem e texto na seção "Quem sou eu" */
+                align-items: center;
+                gap: 20px;
+            }
+            .about-me-section img {
+                width: 150px;
+                height: 150px;
+            }
+            .about-me-text {
+                max-width: 100%; /* Texto ocupa largura total */
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="main-content">
-        <h1>Organize os processos que fazem o seu negócio escalar</h1>
-        <h2>Inteligência artificial para negócios no Digital</h2>
+    <!-- Container principal para todo o conteúdo da página -->
+    <div class="page-content">
+        <section class="intro-section">
+            <div class="intro-text">
+                <h1>Organize os processos que fazem o seu negócio escalar</h1>
+                <h2>Inteligência artificial para negócios no Digital</h2>
+            </div>
+            <!-- O canvas será renderizado aqui visualmente, mas fisicamente está fixo -->
+            <!-- Criamos um placeholder para manter o espaço e o alinhamento no flexbox -->
+            <div class="threejs-sphere-container" id="threejs-placeholder">
+                <!-- A esfera Three.js será renderizada no canvas #bg-canvas, que está fixo no fundo -->
+            </div>
+        </section>
+
+        <section class="about-me-section">
+            <h3>Quem sou eu</h3>
+            <img src="fernando.png" alt="Foto de Fernando">
+            <div class="about-me-text">
+                <p>Olá! Meu nome é Fernando, e sou um desenvolvedor apaixonado por tecnologia e inovação. Minha jornada no mundo digital começou há alguns anos, explorando diversas linguagens e frameworks, sempre em busca de soluções criativas e eficientes.</p>
+                <p>Sou especialista em transformar ideias complexas em aplicações robustas e intuitivas, com foco especial em otimizar processos e promover o crescimento de negócios no ambiente digital. Acredito firmemente no poder da Inteligência Artificial para redefinir o futuro, e estou sempre atualizado com as últimas tendências para entregar resultados de pontima.</p>
+                <p>Se você busca um parceiro para escalar seu negócio com tecnologia de ponta e uma visão estratégica, vamos conversar!</p>
+            </div>
+        </section>
     </div>
 
-    <!-- O elemento canvas, agora posicionado à direita -->
+    <!-- O elemento canvas, que agora será o fundo de toda a página -->
     <canvas id="bg-canvas"></canvas>
 
     <div id="error-message"></div>
@@ -96,7 +225,6 @@
             throw new Error("Canvas element not found.");
         }
 
-        // Three.js renderer deve ser criado com o canvas real, não um placeholder
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setClearColor(0x050509, 1);
@@ -106,7 +234,7 @@
 
         const camera = new THREE.PerspectiveCamera(
             45,
-            canvas.clientWidth / canvas.clientHeight, // Usar o tamanho do canvas para o aspect ratio
+            window.innerWidth / window.innerHeight, // Câmera agora usa o tamanho total da janela
             0.1,
             100
         );
@@ -133,9 +261,12 @@
                 float breathing = 0.5 + 0.5 * sin(uTime * 0.7);
                 float displacement = (n * 0.7 + breathing * 0.3) * uNoiseAmp;
 
-                vec3 mouseDir = normalize(vec3(uMouse, 1.0));
+                // A influência do mouse será menos direcional para a esfera agora que ela é um fundo geral
+                // e a interação pode ser mais global ou menos pronunciada se o cursor não estiver sobre ela.
+                // Ajustei a força para ser mais sutil.
+                vec3 mouseDir = normalize(vec3(uMouse, 0.5)); // Z um pouco menor para um efeito mais "para fora"
                 float mouseEffect = dot(normalize(pos), mouseDir);
-                displacement += mouseEffect * uMouseStrength;
+                displacement += mouseEffect * (uMouseStrength * 0.4); // Reduzindo a força do mouse
 
                 vec3 newPos = pos + normal * displacement;
 
@@ -154,9 +285,9 @@
                 if (d > 0.5) discard;
 
                 // Paleta de cores amarelas e brancas
-                vec3 colorCore = vec3(0.1, 0.08, 0.03);   // Base escura amarelada
-                vec3 colorEdge = vec3(1.0, 0.9, 0.6);    // Amarelo claro
-                vec3 colorGlow = vec3(1.0, 1.0, 1.0);    // Branco puro para o highlight
+                vec3 colorCore = vec3(0.1, 0.08, 0.03);
+                vec3 colorEdge = vec3(1.0, 0.9, 0.6);
+                vec3 colorGlow = vec3(1.0, 1.0, 1.0);
 
                 float glow = smoothstep(0.0, 0.4, vNoise);
 
@@ -197,22 +328,21 @@
         const targetMouse = new THREE.Vector2(0, 0);
 
         window.addEventListener("mousemove", (event) => {
-            // As coordenadas do mouse agora precisam ser relativas ao canvas se ele não ocupar 100%
-            const rect = canvas.getBoundingClientRect();
-            targetMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            targetMouse.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+            // Agora o mouse interage com a esfera de fundo, que ocupa a tela toda
+            targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            targetMouse.y = -((event.clientY / window.innerHeight) * 2 - 1);
         });
 
         // ======== RESPONSIVIDADE ========
         function onResize() {
-            const width = canvas.clientWidth; // Usar clientWidth/Height do canvas
-            const height = canvas.clientHeight; // para pegar o tamanho renderizado
+            const width = window.innerWidth; // Renderiza para a largura total da janela
+            const height = window.innerHeight;
             renderer.setSize(width, height);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
         }
         window.addEventListener("resize", onResize);
-        onResize(); // Chama uma vez para configurar o tamanho inicial
+        onResize();
 
         // ======== LOOP DE ANIMAÇÃO ========
         let clock = new THREE.Clock();
