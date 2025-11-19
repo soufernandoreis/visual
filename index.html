@@ -3,24 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js Sphere Animada</title>
-    <!-- Estilos CSS básicos para o canvas ocupar a tela inteira -->
+    <title>Inteligência Artificial para Negócios</title>
+    <!-- Estilos CSS básicos para o canvas e os textos H1/H2 -->
     <style>
         body {
-            margin: 0;             /* Remove a margem padrão do body */
-            overflow: hidden;      /* Evita barras de rolagem indesejadas */
+            margin: 0;
+            overflow: hidden;
             background-color: #050509; /* Cor de fundo para combinar com o Three.js */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte mais moderna */
+            color: white; /* Cor padrão do texto */
+            display: flex; /* Para centralizar o conteúdo verticalmente */
+            flex-direction: column;
+            justify-content: center; /* Centraliza verticalmente */
+            align-items: center; /* Centraliza horizontalmente */
+            min-height: 100vh; /* Garante que o body ocupe a altura total da viewport */
+            position: relative; /* Necessário para posicionar o canvas e o conteúdo */
         }
         #bg-canvas {
-            display: block;        /* Garante que o canvas não tenha espaços extras */
-            width: 100vw;          /* Ocupa 100% da largura da viewport */
-            height: 100vh;         /* Ocupa 100% da altura da viewport */
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            position: fixed; /* Fixa o canvas na tela para que outros elementos possam ficar por cima */
+            top: 0;
+            left: 0;
+            z-index: -1; /* Coloca o canvas atrás de outros conteúdos do body */
+        }
+
+        /* Estilos para o H1 */
+        h1 {
+            text-align: center;
+            font-size: 2.8em; /* Tamanho ajustado para caber a frase */
+            color: #E0FFFF; /* Um ciano claro, combinando com a esfera */
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.7); /* Sombra para um efeito de brilho mais forte */
+            margin-bottom: 10px; /* Espaço entre H1 e H2 */
+            line-height: 1.2; /* Espaçamento entre linhas */
+            max-width: 80%; /* Limita a largura para que o texto não se estique muito em telas grandes */
+            z-index: 1; /* Garante que o H1 esteja acima do canvas */
+        }
+
+        /* Estilos para o H2 */
+        h2 {
+            text-align: center;
+            font-size: 1.5em; /* Tamanho para o subtítulo */
+            color: #B0E0E6; /* Cor ligeiramente mais escura que o H1 */
+            text-shadow: 0 0 8px rgba(176, 224, 230, 0.6); /* Sombra suave */
+            margin-top: 0; /* Remove margem superior padrão do h2 */
+            max-width: 70%;
+            z-index: 1; /* Garante que o H2 esteja acima do canvas */
+        }
+
+        /* Estilo para a mensagem de erro se o canvas não for encontrado */
+        #error-message {
+            color: white;
+            text-align: center;
+            margin-top: 50px;
+            font-size: 1.2em;
+            z-index: 10; /* Garante que a mensagem de erro esteja acima de tudo */
+            position: absolute; /* Para que possa ser posicionado independentemente */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
+    <!-- Seus títulos H1 e H2 -->
+    <h1>Organize os processos que fazem o seu negócio escalar</h1>
+    <h2>Inteligência artificial para negócios no Digital</h2>
+
     <!-- O elemento canvas onde o Three.js renderizará a cena -->
     <canvas id="bg-canvas"></canvas>
+
+    <!-- Um div para exibir mensagens de erro se o canvas não for encontrado -->
+    <div id="error-message"></div>
 
     <!-- Importa a biblioteca Three.js -->
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
@@ -29,20 +87,20 @@
     <script>
         // ======== CONFIGURAÇÃO BÁSICA DO THREE.JS ========
         const canvas = document.getElementById("bg-canvas");
+        const errorMessageDiv = document.getElementById("error-message");
+
         if (!canvas) {
             console.error("Erro: Elemento canvas com ID 'bg-canvas' não encontrado!");
-            // Se o canvas não for encontrado, não há sentido em continuar
-            // Poderíamos exibir uma mensagem para o usuário ou fazer um fallback
-            document.body.innerHTML = "<p style='color: white; text-align: center; margin-top: 50px;'>Ops! O canvas não foi encontrado. Verifique seu HTML.</p>";
+            errorMessageDiv.innerHTML = "<p>Ops! O canvas não foi encontrado. Verifique seu HTML.</p>";
             throw new Error("Canvas element not found.");
         }
 
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setClearColor(0x050509, 1); // Cor de fundo do renderizador
+        renderer.setClearColor(0x050509, 1);
 
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050509, 0.35); // Névoa para profundidade
+        scene.fog = new THREE.FogExp2(0x050509, 0.35);
 
         const camera = new THREE.PerspectiveCamera(
             45,
@@ -60,131 +118,116 @@
             uniform vec2  uMouse;
             varying float vNoise;
 
-            // Função hash para gerar ruído (base para a "respiração" e deformação)
             float hash(vec3 p) {
                 return sin(dot(p, vec3(17.1, 31.7, 11.3)) + uTime * 0.6);
             }
 
             void main() {
-                vec3 pos = position; // Posição original do vértice
+                vec3 pos = position;
 
-                // Calcula o ruído baseado na normal e posição do vértice
                 float n = hash(normal * 3.0 + pos * 2.0);
-                n = 0.5 + 0.5 * n; // Normaliza o ruído para o intervalo [0, 1]
+                n = 0.5 + 0.5 * n;
 
-                // Efeito de "respiração" usando seno para um movimento orgânico
                 float breathing = 0.5 + 0.5 * sin(uTime * 0.7);
-                // Combina o ruído e a respiração para o deslocamento
                 float displacement = (n * 0.7 + breathing * 0.3) * uNoiseAmp;
 
-                // Influência do mouse: vertices mais próximos da direção do mouse se deslocam mais
-                // uMouse está em (-1..1) para X e Y
-                vec3 mouseDir = normalize(vec3(uMouse, 1.0)); // Direção 3D do mouse (Z fixo)
-                float mouseEffect = dot(normalize(pos), mouseDir); // Produto escalar para influência direcional
-                displacement += mouseEffect * uMouseStrength; // Adiciona o efeito do mouse ao deslocamento
+                vec3 mouseDir = normalize(vec3(uMouse, 1.0));
+                float mouseEffect = dot(normalize(pos), mouseDir);
+                displacement += mouseEffect * uMouseStrength;
 
-                // Aplica o deslocamento ao longo da normal do vértice
                 vec3 newPos = pos + normal * displacement;
 
-                vNoise = n; // Passa o valor do ruído para o fragment shader
+                vNoise = n;
 
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
-                gl_PointSize = 2.2; // Tamanho dos pontos renderizados
+                gl_PointSize = 2.2;
             }
         `;
 
         const fragmentShader = `
-            varying float vNoise; // Ruído calculado no vertex shader
+            varying float vNoise;
 
             void main() {
-                // Distância do centro do ponto (gl_PointCoord vai de 0 a 1 em X e Y)
                 float d = length(gl_PointCoord - 0.5);
-                if (d > 0.5) discard; // Descarta pixels fora do círculo do ponto
+                if (d > 0.5) discard;
 
-                // Paleta de cores para o efeito de brilho e profundidade
-                vec3 colorCore = vec3(0.03, 0.08, 0.16);   // Cor mais escura para o "miolo"
-                vec3 colorEdge = vec3(0.68, 0.92, 1.00);   // Cor ciano claro para as bordas
-                vec3 colorGlow = vec3(1.00, 1.00, 1.00);   // Cor branca para o destaque
+                vec3 colorCore = vec3(0.03, 0.08, 0.16);
+                vec3 colorEdge = vec3(0.68, 0.92, 1.00);
+                vec3 colorGlow = vec3(1.00, 1.00, 1.00);
 
-                // Calcula o brilho com base no ruído (vNoise)
-                float glow = smoothstep(0.0, 0.4, vNoise); // Suaviza a transição do brilho
+                float glow = smoothstep(0.0, 0.4, vNoise);
 
-                // Mistura as cores para criar o gradiente
-                vec3 color = mix(colorCore, colorEdge, vNoise); // Mistura do core para a borda
-                color = mix(color, colorGlow, glow * 0.35);    // Adiciona o brilho
+                vec3 color = mix(colorCore, colorEdge, vNoise);
+                color = mix(color, colorGlow, glow * 0.35);
 
-                // Calcula a opacidade do ponto (fica mais transparente nas bordas)
                 float alpha = 1.0 - smoothstep(0.3, 0.5, d);
-                alpha *= 0.95; // Reduz ligeiramente a opacidade geral
+                alpha *= 0.95;
 
-                gl_FragColor = vec4(color, alpha); // Define a cor final do pixel
+                gl_FragColor = vec4(color, alpha);
             }
         `;
 
         // ======== GEOMETRIA + MATERIAL ========
-        // Aumentamos a DENSIDADE (mais segmentos) para uma aparência mais detalhada
-        const geometry = new THREE.SphereGeometry(1.4, 260, 260);
+        // Tamanho da esfera alterado para 0.5
+        const geometry = new THREE.SphereGeometry(0.5, 260, 260); // Raio alterado de 1.4 para 0.5
 
         const uniforms = {
             uTime:          { value: 0 },
-            uNoiseAmp:      { value: 1.1 },  // Amplitude do ruído e "respiração" (um pouco mais forte)
-            uMouseStrength: { value: 0.6 },  // Sensibilidade à interação do mouse (um pouco mais sensível)
-            uMouse:         { value: new THREE.Vector2(0.0, 0.0) } // Posição normalizada do mouse
+            uNoiseAmp:      { value: 1.1 },
+            uMouseStrength: { value: 0.6 },
+            uMouse:         { value: new THREE.Vector2(0.0, 0.0) }
         };
 
         const material = new THREE.ShaderMaterial({
             uniforms,
             vertexShader,
             fragmentShader,
-            transparent: true,         // Permite que o material tenha transparência
-            blending: THREE.AdditiveBlending, // Modo de mistura aditiva para o efeito de brilho
-            depthWrite: false          // Desabilita a escrita no depth buffer para melhor blending
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
         });
 
         const points = new THREE.Points(geometry, material);
         scene.add(points);
 
         // ======== INTERAÇÃO COM O CURSOR ========
-        const mouse = new THREE.Vector2(0, 0); // Armazena a posição atual do mouse (normalizada)
-        const targetMouse = new THREE.Vector2(0, 0); // Posição alvo para suavizar o movimento
+        const mouse = new THREE.Vector2(0, 0);
+        const targetMouse = new THREE.Vector2(0, 0);
 
         window.addEventListener("mousemove", (event) => {
-            // Converte as coordenadas do mouse para o intervalo [-1, 1]
             targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1; // Y invertido para Three.js
+            targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         });
 
         // ======== RESPONSIVIDADE ========
         function onResize() {
             const width = window.innerWidth;
             const height = window.innerHeight;
-            renderer.setSize(width, height); // Redimensiona o renderizador
-            camera.aspect = width / height;  // Ajusta o aspect ratio da câmera
-            camera.updateProjectionMatrix(); // Atualiza a matriz de projeção da câmera
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
         }
         window.addEventListener("resize", onResize);
-        onResize(); // Chama uma vez para configurar o tamanho inicial
+        onResize();
 
         // ======== LOOP DE ANIMAÇÃO ========
-        let clock = new THREE.Clock(); // Ajuda a controlar o tempo da animação
+        let clock = new THREE.Clock();
 
         function animate() {
-            requestAnimationFrame(animate); // Loop de animação
+            requestAnimationFrame(animate);
 
-            const elapsed = clock.getElapsedTime(); // Tempo decorrido desde o início
-            uniforms.uTime.value = elapsed; // Passa o tempo para os shaders
+            const elapsed = clock.getElapsedTime();
+            uniforms.uTime.value = elapsed;
 
-            // Suaviza a transição da posição do mouse para os uniforms
             uniforms.uMouse.value.lerp(targetMouse, 0.1);
 
-            // Movimento de rotação e oscilação da esfera
-            points.rotation.y += 0.0032; // Rotação contínua no eixo Y
-            points.rotation.x = Math.sin(elapsed * 0.18) * 0.14; // Oscilação no eixo X
+            points.rotation.y += 0.0032;
+            points.rotation.x = Math.sin(elapsed * 0.18) * 0.14;
 
-            renderer.render(scene, camera); // Renderiza a cena
+            renderer.render(scene, camera);
         }
 
-        animate(); // Inicia o loop de animação
+        animate();
     </script>
 </body>
 </html>
