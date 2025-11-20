@@ -9,7 +9,7 @@
         body {
             margin: 0;
             /* Removido overflow: hidden para permitir rolagem com novo conteúdo */
-            background-color: #050509; /* Cor de fundo */
+            background: linear-gradient(135deg, #0B2922 0%, #050C0A 100%); /* Novo gradiente */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
             /* Layout flexbox para o conteúdo principal */
@@ -227,10 +227,12 @@
 
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setClearColor(0x050509, 1);
+        // Removido setClearColor pois o gradiente CSS já define o fundo
+        // renderer.setClearColor(0x050509, 1); 
 
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050509, 0.35);
+        // Ajustado o fog para corresponder melhor ao novo gradiente
+        scene.fog = new THREE.FogExp2(0x0B2922, 0.35); 
 
         const camera = new THREE.PerspectiveCamera(
             45,
